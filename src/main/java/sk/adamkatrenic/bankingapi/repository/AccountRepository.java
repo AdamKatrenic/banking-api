@@ -1,0 +1,14 @@
+package sk.adamkatrenic.bankingapi.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import sk.adamkatrenic.bankingapi.entity.Account;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface AccountRepository extends JpaRepository<Account, Long> {
+    List<Account> findByUserId(Long userId);
+    Optional<Account> findByAccountNumber(String accountNumber);
+}
