@@ -8,6 +8,7 @@ import sk.adamkatrenic.bankingapi.entity.User;
 import sk.adamkatrenic.bankingapi.repository.AccountRepository;
 import sk.adamkatrenic.bankingapi.repository.UserRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +27,7 @@ public class AccountService {
         account.setUser(user);
         account.setAccountNumber("SK" + UUID.randomUUID()
                 .toString().replace("-", "").substring(0, 16).toUpperCase());
+        account.setBalance(BigDecimal.valueOf(10000));
 
         Account saved = accountRepository.save(account);
         return toResponse(saved);
