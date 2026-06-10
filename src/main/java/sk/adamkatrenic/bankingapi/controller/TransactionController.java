@@ -29,7 +29,7 @@ public class TransactionController {
 
     @PostMapping("/withdraw")
     public ResponseEntity<TransactionResponse> withdraw(@Valid @RequestBody TransactionRequest request) {
-        return ResponseEntity.ok(transactionService.deposit(request));
+        return ResponseEntity.ok(transactionService.withdraw(request));
     }
 
     @GetMapping("/history/{accountNumber}")
