@@ -10,6 +10,7 @@ import sk.adamkatrenic.bankingapi.entity.Transaction;
 import sk.adamkatrenic.bankingapi.entity.TransactionType;
 import sk.adamkatrenic.bankingapi.repository.AccountRepository;
 import sk.adamkatrenic.bankingapi.repository.TransactionRepository;
+import sk.adamkatrenic.bankingapi.repository.UserRepository;
 
 import java.util.List;
 
@@ -19,6 +20,8 @@ public class TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
 
     @Transactional
     public TransactionResponse deposit(TransactionRequest request) {
@@ -26,7 +29,11 @@ public class TransactionService {
         account.setBalance(account.getBalance().add(request.getAmount()));
         accountRepository.save(account);
 
-        return saveTransaction(null, account, request.getAmount(), TransactionType.DEPOSIT);
+        TransactionResponse response = saveTransaction(null, account, request.getAmount(), TransactionType.DEPOSIT);
+
+        sendNotification(account, "DEPOSIT", request.getAmount(), account.getBalance());
+
+        return response;
     }
 
     @Transactional
@@ -40,7 +47,11 @@ public class TransactionService {
         account.setBalance(account.getBalance().subtract(request.getAmount()));
         accountRepository.save(account);
 
-        return saveTransaction(account, null, request.getAmount(), TransactionType.WITHDRAWAL);
+        TransactionResponse response = saveTransaction(account, null, request.getAmount(), TransactionType.WITHDRAWAL);
+
+        sendNotification(account, "WITHDRAWAL", request.getAmount(), account.getBalance());
+
+        return response;
     }
 
     @Transactional
@@ -58,7 +69,11 @@ public class TransactionService {
         accountRepository.save(from);
         accountRepository.save(to);
 
-        return saveTransaction(from, to, request.getAmount(), TransactionType.TRANSFER);
+        TransactionResponse response = saveTransaction(from, to, request.getAmount(), TransactionType.TRANSFER);
+
+        sendNotification(from, "TRANSFER", request.getAmount(), from.getBalance());
+
+        return response;
     }
 
     public List<TransactionResponse> getHistory(String accountNumber) {
@@ -74,6 +89,17 @@ public class TransactionService {
     private Account findAccount(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Account not found: " + accountNumber));
+    }
+
+    private void sendNotification(Account account, String type,
+                                  java.math.BigDecimal amount, java.math.BigDecimal balance) {
+        try {
+            String email = account.getUser().getEmail();
+            emailService.sendTransactionNotification(email, type, amount, balance);
+        } catch (Exception e) {
+            // Email zlyhanie nesmie zastaviť transakciu
+            System.out.println("Email notification failed: " + e.getMessage());
+        }
     }
 
     private TransactionResponse saveTransaction(Account from, Account to,
