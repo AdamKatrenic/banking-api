@@ -1,6 +1,9 @@
 package sk.adamkatrenic.bankingapi.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sk.adamkatrenic.bankingapi.dto.TransactionRequest;
@@ -11,8 +14,6 @@ import sk.adamkatrenic.bankingapi.entity.TransactionType;
 import sk.adamkatrenic.bankingapi.repository.AccountRepository;
 import sk.adamkatrenic.bankingapi.repository.TransactionRepository;
 import sk.adamkatrenic.bankingapi.repository.UserRepository;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,9 +31,7 @@ public class TransactionService {
         accountRepository.save(account);
 
         TransactionResponse response = saveTransaction(null, account, request.getAmount(), TransactionType.DEPOSIT);
-
         sendNotification(account, "DEPOSIT", request.getAmount(), account.getBalance());
-
         return response;
     }
 
@@ -48,9 +47,7 @@ public class TransactionService {
         accountRepository.save(account);
 
         TransactionResponse response = saveTransaction(account, null, request.getAmount(), TransactionType.WITHDRAWAL);
-
         sendNotification(account, "WITHDRAWAL", request.getAmount(), account.getBalance());
-
         return response;
     }
 
@@ -70,20 +67,17 @@ public class TransactionService {
         accountRepository.save(to);
 
         TransactionResponse response = saveTransaction(from, to, request.getAmount(), TransactionType.TRANSFER);
-
         sendNotification(from, "TRANSFER", request.getAmount(), from.getBalance());
-
         return response;
     }
 
-    public List<TransactionResponse> getHistory(String accountNumber) {
+    public Page<TransactionResponse> getHistory(String accountNumber, int page, int size) {
         Account account = findAccount(accountNumber);
+        Pageable pageable = PageRequest.of(page, size);
         return transactionRepository
                 .findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
-                        account.getId(), account.getId())
-                .stream()
-                .map(this::toResponse)
-                .toList();
+                        account.getId(), account.getId(), pageable)
+                .map(this::toResponse);
     }
 
     private Account findAccount(String accountNumber) {
@@ -97,7 +91,6 @@ public class TransactionService {
             String email = account.getUser().getEmail();
             emailService.sendTransactionNotification(email, type, amount, balance);
         } catch (Exception e) {
-            // Email zlyhanie nesmie zastaviť transakciu
             System.out.println("Email notification failed: " + e.getMessage());
         }
     }

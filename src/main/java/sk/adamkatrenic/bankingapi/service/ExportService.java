@@ -6,6 +6,8 @@ import sk.adamkatrenic.bankingapi.entity.Account;
 import sk.adamkatrenic.bankingapi.entity.Transaction;
 import sk.adamkatrenic.bankingapi.repository.AccountRepository;
 import sk.adamkatrenic.bankingapi.repository.TransactionRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
@@ -19,12 +21,16 @@ public class ExportService {
     private final TransactionRepository transactionRepository;
 
     public byte[] exportTransactionsCsv(String accountNumber) {
+
+        Pageable pageable = PageRequest.of(0, 1000);
+
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
         List<Transaction> transactions = transactionRepository
                 .findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
-                        account.getId(), account.getId());
+                        account.getId(), account.getId(), pageable)
+                .getContent();
 
         StringBuilder csv = new StringBuilder();
         csv.append("ID,Type,Amount,From Account,To Account,Date\n");
