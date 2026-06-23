@@ -10,6 +10,7 @@ import sk.adamkatrenic.bankingapi.dto.RegisterRequest;
 import sk.adamkatrenic.bankingapi.entity.User;
 import sk.adamkatrenic.bankingapi.repository.UserRepository;
 import sk.adamkatrenic.bankingapi.security.JwtUtil;
+import sk.adamkatrenic.bankingapi.dto.ChangePasswordRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -38,5 +39,17 @@ public class AuthService {
                         request.getEmail(), request.getPassword())
         );
         return jwtUtil.generateToken(request.getEmail());
+    }
+
+    public void changePassword(String email, ChangePasswordRequest request) {
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

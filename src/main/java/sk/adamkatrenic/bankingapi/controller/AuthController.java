@@ -8,6 +8,9 @@ import sk.adamkatrenic.bankingapi.dto.LoginRequest;
 import sk.adamkatrenic.bankingapi.dto.RegisterRequest;
 import sk.adamkatrenic.bankingapi.service.AuthService;
 import java.util.Map;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import sk.adamkatrenic.bankingapi.dto.ChangePasswordRequest;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,5 +29,13 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request);
         return ResponseEntity.ok(Map.of("token", token));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        authService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.ok().build();
     }
 }
