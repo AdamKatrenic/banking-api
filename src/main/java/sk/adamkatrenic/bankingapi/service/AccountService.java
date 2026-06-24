@@ -7,6 +7,7 @@ import sk.adamkatrenic.bankingapi.dto.AccountResponse;
 import sk.adamkatrenic.bankingapi.entity.Account;
 import sk.adamkatrenic.bankingapi.entity.User;
 import sk.adamkatrenic.bankingapi.repository.AccountRepository;
+import sk.adamkatrenic.bankingapi.repository.TransactionRepository;
 import sk.adamkatrenic.bankingapi.repository.UserRepository;
 
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     public AccountResponse createAccount(String email) {
 
@@ -46,7 +48,6 @@ public class AccountService {
 
     @Transactional
     public AccountResponse deleteAccount(Long accountId, String email) {
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -60,6 +61,9 @@ public class AccountService {
         AccountResponse response = new AccountResponse();
         response.setId(account.getId());
         response.setAccountNumber(account.getAccountNumber());
+
+        transactionRepository.deleteByFromAccountId(accountId);
+        transactionRepository.deleteByToAccountId(accountId);
 
         accountRepository.delete(account);
 
