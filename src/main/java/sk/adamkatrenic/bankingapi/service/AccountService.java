@@ -1,5 +1,6 @@
 package sk.adamkatrenic.bankingapi.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import sk.adamkatrenic.bankingapi.dto.AccountResponse;
@@ -9,6 +10,7 @@ import sk.adamkatrenic.bankingapi.repository.AccountRepository;
 import sk.adamkatrenic.bankingapi.repository.UserRepository;
 
 import java.math.BigDecimal;
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,6 +42,28 @@ public class AccountService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Transactional
+    public AccountResponse deleteAccount(Long accountId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You are not authorized to delete this account");
+        }
+
+        AccountResponse response = new AccountResponse();
+        response.setId(account.getId());
+        response.setAccountNumber(account.getAccountNumber());
+
+        accountRepository.delete(account);
+
+        return response;
     }
 
     private AccountResponse toResponse(Account account){
