@@ -95,9 +95,10 @@ class TransactionControllerTest {
                 .content("{\"accountNumber\":\"" + accountNumber + "\",\"amount\":100}"));
 
         // Get history
-        mockMvc.perform(get("/api/transactions/history/" + accountNumber)
+        mockMvc.perform(get("/api/transactions/history/" + accountNumber + "?page=0&size=10")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalPages").exists());
     }
 }

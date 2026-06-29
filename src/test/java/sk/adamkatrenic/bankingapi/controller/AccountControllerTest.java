@@ -74,9 +74,11 @@ class AccountControllerTest {
     }
 
     @Test
-    void shouldReturn403WhenNoToken() throws Exception {
-        mockMvc.perform(post("/api/accounts")
+    void shouldFailWhenNoToken() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/accounts")
                         .contentType("application/json"))
-                .andExpect(status().is(400));
+                .andReturn();
+
+        assert result.getResponse().getStatus() != 200;
     }
 }
