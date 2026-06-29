@@ -4,6 +4,7 @@ A production-ready banking platform built with Java and Spring Boot, featuring J
 
 **Live API:** [banking-api-production-238c.up.railway.app/swagger-ui/index.html](https://banking-api-production-238c.up.railway.app/swagger-ui/index.html)  
 **Frontend:** [banking-frontend-steel.vercel.app](https://banking-frontend-steel.vercel.app)
+![CI](https://github.com/AdamKatrenic/banking-api/actions/workflows/ci.yml/badge.svg)
 
 ---
 
